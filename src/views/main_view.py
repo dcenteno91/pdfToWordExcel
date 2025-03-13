@@ -54,6 +54,7 @@ class MainView:
     select_file_button.pack(pady=20)  # Centrar el botón y agregar espacio vertical
     select_file_button.place(relx=0.5, rely=0.77, anchor=tk.CENTER)  # Centrar el botón en la parte inferior de la ventana
 
+    # Crear un Label para mostrar el pie de página
     footer_label = tk.Label(self.root, text=f"Desarrollado por: Daniel Centeno", bg="lightblue", foreground="#333")
     footer_label.pack(pady=10)
     footer_label.place(relx=0.5, rely=0.98, anchor=tk.CENTER)
