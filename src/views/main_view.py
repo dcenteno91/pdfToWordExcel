@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import ttk
 import os
 from PIL import Image, ImageTk  # Importar las clases necesarias
 from pdf2docx import Converter  # Importar la clase Converter
@@ -12,7 +13,7 @@ class MainView:
   def __init__(self, root):    
     self.root = root
     self.root.title("Pantalla Principal")
-    self.root.geometry("720x360")  # Tamaño de la nueva ventana    
+    self.root.geometry("720x400")  # Tamaño de la nueva ventana    
     self.root.config(bg="lightblue")  # Cambiar el color de fondo de la ventana
     self.root.resizable(False, False)  # Evitar que la ventana sea redimensionable
 
@@ -26,9 +27,8 @@ class MainView:
         project_dir = sys._MEIPASS
     else:
         project_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    
-    image_path = os.path.join(project_dir, 'assets', 'img-app.jpg')
-
+        
+    image_path = os.path.join(project_dir, 'assets', 'img-app.png')
     # # Redimensionar la imagen usando Pillow
     try:
       image = Image.open(image_path)
@@ -38,49 +38,69 @@ class MainView:
       image_label.image = photo
       image_label.pack(pady=10)
       # Centrar imagen en la ventana principal
-      image_label.place(relx=0.5, rely=0.4, anchor=tk.CENTER)
+      image_label.place(relx=0.5, rely=0.35, anchor=tk.CENTER)
       
     except Exception as e:
-      print(f"Error al cargar la imagen: {e}")
+      messagebox.showerror(f"Error al cargar la imagen", e)
 
     
     # Agregar botón para seleccionar archivo
     select_file_button = tk.Button(root, text="Seleccionar PDF para convertir a WORD", command=lambda: self.select_file(tipo="word"))
     select_file_button.pack(pady=20)  # Centrar el botón y agregar espacio vertical
-    select_file_button.place(relx=0.5, rely=0.7, anchor=tk.CENTER)  # Centrar el botón en la parte inferior de la ventana
+    select_file_button.place(relx=0.5, rely=0.68, anchor=tk.CENTER)  # Centrar el botón en la parte inferior de la ventana
 
     # Agregar botón para seleccionar archivo
     select_file_button = tk.Button(root, text="Seleccionar PDF para convertir a EXCEL", command=lambda: self.select_file(tipo="excel"))
     select_file_button.pack(pady=20)  # Centrar el botón y agregar espacio vertical
-    select_file_button.place(relx=0.5, rely=0.8, anchor=tk.CENTER)  # Centrar el botón en la parte inferior de la ventana
+    select_file_button.place(relx=0.5, rely=0.77, anchor=tk.CENTER)  # Centrar el botón en la parte inferior de la ventana
 
-    footer_label = tk.Label(self.root, text=f"Desarrollado por: Daniel Centeno", bg="lightblue", foreground="red")
+    footer_label = tk.Label(self.root, text=f"Desarrollado por: Daniel Centeno", bg="lightblue", foreground="#333")
     footer_label.pack(pady=10)
-    footer_label.place(relx=0.5, rely=0.97, anchor=tk.CENTER)
-
-    # def resource_path(relative_path):
-    #   try:
-    #     if hasattr(sys, '_MEIPASS'):
-    #       base_path = sys._MEIPASS
-    #     else:
-    #       base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    #   except Exception:
-    #     base_path = os.path.abspath(".")
-      
-    #   return os.path.join(base_path, relative_path)
+    footer_label.place(relx=0.5, rely=0.98, anchor=tk.CENTER)
 
   def select_file(self, tipo):
     file_path = filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
-    if file_path: 
-      # Crear un nuevo Label para mostrar la ruta del archivo seleccionado
-      msg = f"Archivo seleccionado: {file_path}"
-      messagebox.showinfo("Éxito", msg)      
+    if file_path: # Si se selecciona un archivo
+      # Agregar texto para indicar que el archivo se está procesando
+      processing_label = tk.Label(self.root, text="Procesando archivo...", bg="lightblue", foreground="black")
+      processing_label.pack(pady=10)
+      processing_label.place(relx=0.5, rely=0.85, anchor=tk.CENTER)
+
+      # Agregar spinner para indicar que el archivo se está procesando
+      spinner = ttk.Progressbar(self.root, mode='indeterminate', length=200)
+      spinner.pack(pady=10)
+      spinner.place(relx=0.5, rely=0.90, anchor=tk.CENTER)
+      spinner.start()
+
+      # Actualizar la interfaz gráfica
+      self.root.update_idletasks()
 
       # Convertir el archivo PDF a Word o Excel según el tipo seleccionado
+      success_label = None
       if tipo == "word":
         self.convert_to_word(file_path)
+
+        # Mostrar un mensaje de éxito
+        docx_path = file_path.replace('.pdf', '.docx')        
+        success_label = tk.Label(self.root, text=f"Archivo convertido a WORD con éxito {docx_path}", bg="lightblue", foreground="blue")
+        success_label.pack(pady=10)
+        success_label.place(relx=0.5, rely=0.9, anchor=tk.CENTER)
       else:
         self.convert_to_excel(file_path)
+        
+        # Mostrar un mensaje de éxito
+        xslx_path = file_path.replace('.pdf', '.xlsx')
+        success_label = tk.Label(self.root, text=f"Archivo convertido a EXCEL con éxito en {xslx_path}", bg="lightblue", foreground="green")
+        success_label.pack(pady=10)
+        success_label.place(relx=0.5, rely=0.9, anchor=tk.CENTER)
+      
+      # Detener el spinner y mensaje de procesamiento después de 1 segundo
+      self.root.after(1000, lambda: self.stopSpinner(spinner, processing_label))                  
+
+  def stopSpinner(self, spinner, processing_label):
+    spinner.stop()
+    spinner.destroy()
+    processing_label.destroy()
 
   def convert_to_word(self, pdf_path):
     # Definir la ruta de salida para el archivo Word
@@ -90,11 +110,6 @@ class MainView:
     cv = Converter(pdf_path)
     cv.convert(docx_path, start=0, end=None)
     cv.close()
-    
-    # Mostrar un mensaje de éxito        
-    success_label = tk.Label(self.root, text=f"Archivo convertido Word en: {docx_path}", bg="lightblue", foreground="blue")
-    success_label.pack(pady=10)
-    success_label.place(relx=0.5, rely=0.9, anchor=tk.CENTER)
 
   def convert_to_excel(self, pdf_path):
     # Definir la ruta de salida para el archivo Excel
@@ -110,9 +125,5 @@ class MainView:
         for i, df in enumerate(dfs):
           df.to_excel(writer, sheet_name=f'Hoja{i+1}', index=False)
 
-      # Mostrar un mensaje de éxito
-      success_label = tk.Label(self.root, text=f"Archivo convertido a Excel en: {excel_path}", bg="lightblue", foreground="blue")
-      success_label.pack(pady=10)
-      success_label.place(relx=0.5, rely=0.9, anchor=tk.CENTER)
     except Exception as e:
-      print(f"Error al convertir el archivo a Excel: {e}")
+      messagebox.showerror(f"Error al convertir el archivo a Excel", e)

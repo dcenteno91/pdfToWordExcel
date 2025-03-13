@@ -5,8 +5,12 @@ a = Analysis(
     ['src\\main.py'],
     pathex=[],
     binaries=[],
-    datas=[('assets/img-app.jpg', 'assets')],
-    hiddenimports=[],
+    datas=[
+        ('assets/img-app.png', 'assets'),
+        ('assets/app.ico', 'assets'),
+        ('packages/tabula-1.0.5-jar-with-dependencies.jar', 'tabula')
+    ],
+    hiddenimports=['tabula'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -35,4 +39,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon='assets/app.ico'
 )
