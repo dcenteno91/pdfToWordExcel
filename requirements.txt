@@ -1,0 +1,5 @@
+Tkinter
+PyQt5
+PySide2
+matplotlib
+numpy
